@@ -5,7 +5,7 @@ ARCH ?= amd64
 .PHONY: build test validate package clean
 
 build:
-	DOCKER_BUILDKIT=1 docker build \
+	DOCKER_BUILDKIT=1 docker build --progress=plain \
 		--target binary \
 		--output type=local,dest=. .
 
@@ -26,6 +26,6 @@ package:
 		echo Built $${IMAGE}
 
 clean:
-	rm -rf bin/* dist/*
+	rm -rf bin dist
 
 ci: build validate test package
