@@ -18,11 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-
       - name: Build
         run: make build
 
@@ -30,7 +25,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: helm-controller-amd64
-          path: ./dist/artifacts/*
+          path: ./bin/helm-controller
 
   build-arm:
     runs-on: ubuntu-24.04-arm
@@ -42,10 +37,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
       - name: Set ARCH
         run: echo "ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
 
@@ -67,10 +58,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: helm-controller-${{ matrix.arch }}
+          path: ./bin/helm-controller
 
   test: 
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,18 +70,12 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      
-      - name: Download binary
-        uses: actions/download-artifact@v4
-        with:
-          name: helm-controller-amd64
-          path: ./dist/artifacts
 
       - name: Test
-        run: ./scripts/e2e
+        run: go test ./pkg/... -cover -tags=test
   
   binary-release:
-    needs: [test, build-arm]
+    needs: [build, build-arm, test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -105,24 +90,18 @@ jobs:
       
       - name: Compute checksum for each binary
         run: |
-          arch=["amd64", "arm64", "arm"]
+          arch=("amd64" "arm64" "arm")
           cd dist/artifacts
           for a in "${arch[@]}"; do
-            sha256sum helm-controller-$a > sha256sum-$a.txt
+            sha256sum helm-controller-"${a}" > sha256sum-"${a}".txt
           done
-      
-      - name: Check results
-        run: |
-          ls
-          ls -l dist/artifacts
-      
+          
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/artifacts/helm-controller-*
             dist/artifacts/*.txt
-            dist/artifacts/deploy*.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
           name: ${{ github.ref }}
