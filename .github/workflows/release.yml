@@ -1,0 +1,115 @@
+name: release
+
+on:
+  release:
+    types:
+      - created
+
+env:
+  GHCR_REPO: ghcr.io/${{ github.repository_owner }}/helm-controller
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ARCH: amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          make build
+          mv ./bin/helm-controller ./bin/helm-controller-amd64
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-controller-amd64
+          path: ./bin/helm-controller-amd64
+
+  build-arm:
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, arm]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set ARCH
+        run: echo "ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build arm
+        if: ${{ matrix.arch == 'arm' }}
+        run: |
+          docker build --platform='linux/arm/v7' --target binary --output type=local,dest=. .
+          mv ./bin/helm-controller ./bin/helm-controller-arm
+
+      
+      - name: Build arm64
+        if: ${{ matrix.arch == 'arm64' }}
+        run: |
+          make build
+          mv ./bin/helm-controller ./bin/helm-controller-arm64
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-controller-${{ matrix.arch }}
+          path: ./bin/helm-controller-${{ matrix.arch }}
+
+  test: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Test
+        run: go test ./pkg/... -cover -tags=test
+  
+  binary-release:
+    needs: [build, build-arm, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helm-controller-*
+          path: ./dist/artifacts
+          merge-multiple: true
+      
+      - name: Compute checksum for each binary
+        run: |
+          arch=("amd64" "arm64" "arm")
+          cd dist/artifacts
+          ls
+          for a in "${arch[@]}"; do
+            sha256sum helm-controller-"${a}" > sha256sum-"${a}".txt
+          done
+          
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/artifacts/helm-controller-*
+            dist/artifacts/*.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          name: ${{ github.ref }}
