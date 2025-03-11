@@ -91,7 +91,9 @@ jobs:
       - name: Compute checksum for each binary
         run: |
           arch=("amd64" "arm64" "arm")
+          ls
           cd dist/artifacts
+          ls
           for a in "${arch[@]}"; do
             sha256sum helm-controller-"${a}" > sha256sum-"${a}".txt
           done
