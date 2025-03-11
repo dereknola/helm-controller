@@ -19,13 +19,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build
-        run: make build
+        run: |
+          make build
+          mv ./bin/helm-controller ./bin/helm-controller-amd64
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: helm-controller-amd64
-          path: ./bin/helm-controller
+          path: ./bin/helm-controller-amd64
 
   build-arm:
     runs-on: ubuntu-24.04-arm
@@ -48,17 +50,22 @@ jobs:
 
       - name: Build arm
         if: ${{ matrix.arch == 'arm' }}
-        run: docker build --platform='linux/arm/v7' --target binary --output type=local,dest=. .
+        run: |
+          docker build --platform='linux/arm/v7' --target binary --output type=local,dest=. .
+          mv ./bin/helm-controller ./bin/helm-controller-arm
+
       
       - name: Build arm64
         if: ${{ matrix.arch == 'arm64' }}
-        run: make build
+        run: |
+          make build
+          mv ./bin/helm-controller ./bin/helm-controller-arm64
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: helm-controller-${{ matrix.arch }}
-          path: ./bin/helm-controller
+          path: ./bin/helm-controller-${{ matrix.arch }}
 
   test: 
     runs-on: ubuntu-latest
@@ -91,7 +98,6 @@ jobs:
       - name: Compute checksum for each binary
         run: |
           arch=("amd64" "arm64" "arm")
-          ls
           cd dist/artifacts
           ls
           for a in "${arch[@]}"; do
