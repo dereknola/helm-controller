@@ -39,15 +39,23 @@ jobs:
           path: |
             go-build-cache
             go-mod-cache
-          key: ${{ runner.os }}-go-cache-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-cache-pr-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-cache-pr
 
-      - name: Inject go-build-cache
+      - name: Inject Go Cache into Buildx
         uses: reproducible-containers/buildkit-cache-dance@v3
         with:
           cache-map: |
             {
-              "go-build-cache": "/root/.cache/go-build",
-              "go-mod-cache": "/go/pkg/mod"
+              "go-build-cache": {
+                "target": "/root/.cache/go-build",
+                "id": "gobuild"
+              },
+              "go-mod-cache": {
+                "target": "/go/pkg/mod",
+                "id": "gomod"
+              }
             }
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
