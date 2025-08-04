@@ -5,13 +5,13 @@ ARCH ?= amd64
 .PHONY: build test validate package clean
 
 build:
-	DOCKER_BUILDKIT=1 docker build \
+	DOCKER_BUILDKIT=1 docker $(BUILDX) build \
 		--target binary \
 		$(CACHE_ARGS) \
 		--output type=local,dest=. .
 
 validate:
-	docker build --target dev $(CACHE_ARGS) --build-arg ARCH=$(ARCH) -t $(IMAGE_NAME)-dev .
+	docker $(BUILDX) build --target dev $(CACHE_ARGS) --build-arg ARCH=$(ARCH) -t $(IMAGE_NAME)-dev .
 	docker run --rm $(IMAGE_NAME)-dev ./scripts/validate
 
 test:
