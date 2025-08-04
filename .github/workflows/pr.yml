@@ -39,13 +39,13 @@ jobs:
         run: |
           make build \
             BUILDX="buildx" \
-            BUILDX_CACHE"--cache-from=type=gha --cache-to=type=gha,mode=max,scope=build,ghtoken=${{ secrets.GITHUB_TOKEN }}"
+            BUILDX_CACHE="--cache-from=type=gha --cache-to=type=gha,mode=max,scope=build,ghtoken=${{ secrets.GITHUB_TOKEN }}"
     
       - name: Validate
         run: |
           make validate \
             BUILDX="buildx" \
-            BUILDX_CACHE"--load --cache-from=type=gha --cache-to=type=gha,mode=max,scope=validate,ghtoken=${{ secrets.GITHUB_TOKEN }}"
+            BUILDX_CACHE="--load --cache-from=type=gha --cache-to=type=gha,mode=max,scope=validate,ghtoken=${{ secrets.GITHUB_TOKEN }}"
       
       - name: Package
         run: make package
