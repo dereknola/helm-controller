@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ARCH: amd64
-      CACHE_ARGS: "--cache-from=type=local,src=${{ runner.temp }}/.buildx-cache --cache-to=type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max"
+      CACHE_ARGS: "--cache-from=type=local,src=$RUNNER_TEMP/.buildx-cache --cache-to=type=local,dest=$RUNNER_TEMP/.buildx-cache-new,mode=max"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
