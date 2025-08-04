@@ -38,13 +38,13 @@ jobs:
       - name: Build binary
         run: |
           make build \
-            CACHE_ARGS="--cache-from=type=gha --cache-to=type=gha,mode=max,ghtoken=${{ secrets.GITHUB_TOKEN }}" \
+            CACHE_ARGS="--cache-from=type=gha --cache-to=type=gha,mode=max,scope=build,ghtoken=${{ secrets.GITHUB_TOKEN }}" \
             BUILDX="buildx"
     
       - name: Validate
         run: |
           make validate \
-            CACHE_ARGS="--cache-from=type=gha --cache-to=type=gha,mode=max,ghtoken=${{ secrets.GITHUB_TOKEN }}" \
+            CACHE_ARGS="--cache-from=type=gha --cache-to=type=gha,mode=max,scope=validate,ghtoken=${{ secrets.GITHUB_TOKEN }}" \
             BUILDX="buildx"
       
       - name: Package
