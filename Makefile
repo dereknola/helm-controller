@@ -7,10 +7,11 @@ ARCH ?= amd64
 build:
 	DOCKER_BUILDKIT=1 docker build \
 		--target binary \
+		$(CACHE_ARGS) \
 		--output type=local,dest=. .
 
 validate:
-	docker build --target dev --build-arg ARCH=$(ARCH) -t $(IMAGE_NAME)-dev .
+	docker build --target dev $(CACHE_ARGS) --build-arg ARCH=$(ARCH) -t $(IMAGE_NAME)-dev .
 	docker run --rm $(IMAGE_NAME)-dev ./scripts/validate
 
 test:
