@@ -36,10 +36,14 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build binary
-        run: |
-          make build \
-            BUILDX="buildx" \
-            BUILDX_CACHE="--cache-from=type=gha --cache-to=type=gha,mode=max,scope=build,ghtoken=${{ secrets.GITHUB_TOKEN }}"
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: binary
+          push: false
+          outputs: type=local,dest=.
+          cache-from: type=gha,scope=build
+          cache-to: type=gha,mode=max,scope=build
     
       - name: Validate
         run: |

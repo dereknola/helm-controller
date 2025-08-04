@@ -5,9 +5,8 @@ ARCH ?= amd64
 .PHONY: build test validate package clean
 
 build:
-	DOCKER_BUILDKIT=1 docker $(BUILDX) build \
+	DOCKER_BUILDKIT=1 docker build \
 		--target binary \
-		$(BUILDX_CACHE) \
 		--output type=local,dest=. .
 
 validate:
